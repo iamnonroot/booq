@@ -96,7 +96,7 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
             $scope.loading = false;
             $scope.$apply();
         } else {
-            ipcRenderer.send('auth', token);
+            ipcRenderer.send('auth', { token });
         }
     }
     $scope.minimize = () => {

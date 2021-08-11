@@ -80,8 +80,8 @@ ipcMain.on('auth:send', async (res, req = { phone: '' }) => {
     res.reply('auth:send', result);
 });
 
-ipcMain.on('auth:verify', async (res, req = { phone: '', token: '' }) => {
-    let result = await rayconnect.VerifyPhone(req.phone, req.token);
+ipcMain.on('auth:verify', async (res, req = { phone: '', code: '' }) => {
+    let result = await rayconnect.VerifyPhone(req.phone, req.code);
     res.reply('auth:verify', result);
 });
 
