@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booq App</title>
+
+    <link rel="stylesheet" href="./assets/script/angular-material/angular-material.css">
+
+    <link rel="stylesheet" href="./style/style.css">
+</head>
+
+<body ng-app="app" ng-controller="ctrl">
+    <div class="app-bar">
+        <md-icon style="margin-left: 8px;" aria-label="Logo" md-svg-src="./assets/icons/not-mute.svg">
+        </md-icon>
+        <span class="title">Booq</span>
+        <div class="flex"></div>
+        <button ng-click="minimize()">
+            <md-icon md-svg-src="./assets/icons/minimize.svg"></md-icon>
+        </button>
+        <button ng-click="close()">
+            <md-icon md-svg-src="./assets/icons/close.svg"></md-icon>
+        </button>
+    </div>
+
+    <main id="body">
+        <md-toolbar>
+            <div class="md-toolbar-tools fixed">
+                <h2>Booq</h2>
+                <span flex></span>
+                <md-switch ng-if="auth.ed == true" md-invert ng-disabled="loading" ng-model="online"
+                    aria-label="Online/Offline">
+                    <span style="font-size: 14px;">{{online ? 'Online' : 'Offline'}}</span>
+                </md-switch>
+
+                <md-button ng-if="auth.ed == true" class="md-icon-button" ng-disabled="loading"
+                    ng-click="openSettings($event)">
+                    <md-tooltip md-direction="bottom">Settings</md-tooltip>
+                    <md-icon md-svg-src="./assets/icons/settings.svg"></md-icon>
+                </md-button>
+            </div>
+            <div ng-if="!loading && (!auth.ed || (auth.ed && users.length != 0))" class="md-toolbar-tools big-toolbar" ng-class="{'more-big': !auth.ed}"></div>
+        </md-toolbar>
+
+        <md-progress-linear class="md-accent" ng-if="loading" md-mode="indeterminate"></md-progress-linear>
+
+        <div class="container cards" ng-if="!loading && auth.ed == true">
+            <md-card ng-repeat="item in users">
+                <md-card-title>
+                    <md-card-title-text>
+                        <span class="md-headline">{{item.fullname}}</span>
+                        <span class="md-subhead">{{item.phone}}</span>
+                    </md-card-title-text>
+                </md-card-title>
+                <md-card-actions layout="row">
+                    <md-button style="margin-left: 0px;" class="md-icon-button" ng-click="askForDelete($event, $index)">
+                        <md-tooltip md-direction="top">Delete my friend</md-tooltip>
+                        <md-icon md-svg-src="./assets/icons/delete.svg"></md-icon>
+                    </md-button>
+                    <md-button class="md-icon-button" ng-click="openFriendDialog($event, $index)">
+                        <md-tooltip md-direction="top">Edit my friend</md-tooltip>
+                        <md-icon md-svg-src="./assets/icons/edit.svg"></md-icon>
+                    </md-button>
+                    <span flex></span>
+                    <md-button style="margin-right: 0px;" class="md-icon-button"
+                        ng-click="openBigButton($event, $index)">
+                        <md-tooltip md-direction="top">Your friend</md-tooltip>
+                        <md-icon md-svg-src="./assets/icons/next.svg"></md-icon>
+                    </md-button>
+                </md-card-actions>
+            </md-card>
+        </div>
+
+
+        <div class="container auth" ng-if="!loading && auth.ed == false">
+            <md-card>
+                <md-card-title>
+                    <md-card-title-text>
+                        <span class="md-headline">Your account</span>
+                        <span class="md-subhead" ng-if="auth.sent == false">You need an account to make booq for your
+                            friends</span>
+                        <span class="md-subhead" ng-if="auth.sent == true">We've sent a code number to
+                            {{auth.phone}}</span>
+                    </md-card-title-text>
+                </md-card-title>
+                <div class="auth-container">
+                    <md-input-container ng-if="auth.sent == false">
+                        <label>Phone number</label>
+                        <input type="tel" ng-disabled="auth.ing" ng-model="auth.phone">
+                    </md-input-container>
+
+                    <md-input-container ng-if="auth.sent == true">
+                        <label>Code number</label>
+                        <input type="tel" ng-disabled="auth.ing" ng-model="auth.code">
+                    </md-input-container>
+                </div>
+
+                <md-button ng-if="auth.sent" ng-disabled="auth.ing" ng-click="authBack()">Back to phone</md-button>
+                <md-button class="md-raised md-accent" ng-disabled="auth.ing" ng-click="authSubmit()">submit</md-button>
+            </md-card>
+        </div>
+
+        <md-button ng-if="!loading && auth.ed == true" class="md-fab md-accent add" ng-click="openFriendDialog($event)">
+            <md-tooltip md-direction="left">Add new firend</md-tooltip>
+            <md-icon md-svg-src="./assets/icons/add.svg"></md-icon>
+        </md-button>
+    </main>
+
+    <script src="./assets/script/angular/angular.js"></script>
+    <script src="./assets/script/angular-aria/angular-aria.js"></script>
+    <script src="./assets/script/angular-animate/angular-animate.js"></script>
+    <script src="./assets/script/angular-messages/angular-messages.js"></script>
+    <script src="./assets/script/angular-material/angular-material.js"></script>
+
+    <script src="./core/app.js"></script>
+</body>
+
+</html>

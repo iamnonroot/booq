@@ -1,0 +1,10 @@
+<md-dialog>
+    <md-dialog-content style="padding: 20px; max-width: 350px;">
+        <h3 style="margin-bottom: 0;">{{title}}</h3>
+        <p>{{content}}</p>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="end center">
+        <md-button ng-click="close()">{{no}}</md-button>
+        <md-button class="md-raised md-primary" ng-click="close(true)">{{yes}}</md-button>
+    </md-dialog-actions>
+</md-dialog>

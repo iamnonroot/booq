@@ -1,0 +1,38 @@
+{
+  "name": "booq",
+  "version": "0.0.1-alpha",
+  "description": "Make a booq for your friends and make them awake !",
+  "main": "app.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": {
+    "name": "!Root",
+    "email": "iamnonroot@gmail.com",
+    "url": "https://iamroot.ir"
+  },
+  "homepage": "https://iamroot.ir/app/booq",
+  "license": "MIT",
+  "dependencies": {
+    "angular": "^1.8.2",
+    "angular-animate": "^1.8.2",
+    "angular-aria": "^1.8.2",
+    "angular-material": "^1.2.3",
+    "angular-messages": "^1.8.2",
+    "electron-settings": "^4.0.2",
+    "loudness": "^0.4.1",
+    "material-design-icons": "^3.0.1",
+    "rayconnect-client": "^0.11.50"
+  },
+  "devDependencies": {
+    "electron": "^13.1.9",
+    "electron-builder": "^22.11.7"
+  },
+  "build": {
+    "linux": {
+      "target": ["deb"]
+    }
+  }
+}

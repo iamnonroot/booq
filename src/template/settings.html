@@ -1,0 +1,38 @@
+<md-dialog aria-label="Your Friend Dialog">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2>Your booq settings</h2>
+            <span flex></span>
+            <md-button class="md-icon-button" aria-label="Close settings" ng-click="close()">
+                <md-tooltip md-direction="bottom">Close settings</md-tooltip>
+                <md-icon md-svg-src="./assets/icons/close.svg"></md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
+    <md-dialog-content style="min-width: 350px;">
+        <md-list>
+            <md-list-item class="md-2-line" layout="row">
+                <md-icon md-svg-src="./assets/icons/notifications.svg"></md-icon>
+                <div class="md-list-item-text" layout="column">
+                    <span>Notification</span>
+                    <p>{{notification? 'On': 'Off'}}</p>
+                </div>
+                <span flex></span>
+                <md-switch ng-model="notification" ng-change="onNotificationChange()" aria-label="notification">
+                </md-switch>
+            </md-list-item>
+            <md-list-item class="md-1-line" ng-click="logout()">
+                <div class="md-list-item-text" layout="row">
+                    <md-icon md-svg-src="./assets/icons/logout.svg"></md-icon>
+                    <span style="margin-left: 12px; margin-top: 4px;">Logout</span>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line">
+                <div class="md-list-item-text" layout="column">
+                    <span>Version</span>
+                    <p>{{version}}</p>
+                </div>
+            </md-list-item>
+        </md-list>
+    </md-dialog-content>
+</md-dialog>
