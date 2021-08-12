@@ -142,6 +142,7 @@ rayconnect.Query({
     'method': 'GET',
     'scope': 'ring'
 }, (res) => {
+    console.log(res);
     if (res.data['audio'] == 'on') {
         let phone = res.data['phone'] || '';
         playAudio(phone);

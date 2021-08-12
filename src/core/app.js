@@ -194,10 +194,10 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         }).then((result) => {
             if (result == null) return;
             if (index == null) ipcRenderer.send('friend:create', result)
-            else { 
-                 result.id = id;
+            else {
+                result.id = id;
                 ipcRenderer.send('friend:update', result)
-                $rootScope.users[index] = result 
+                $rootScope.users[index] = result
             };
         });
     }
@@ -330,14 +330,16 @@ function BigButtonControl($scope, $rootScope, $mdDialog, index) {
     $scope.sendPlay = () => {
         $scope.booqing = true;
         ipcRenderer.send('booq', {
-            audio: 'on'
+            audio: 'on',
+            to: $scope.user['phone'],
         });
     }
 
     $scope.sendPause = () => {
         if ($scope.booqing == true)
             ipcRenderer.send('booq', {
-                audio: 'off'
+                audio: 'off',
+                to: $scope.user['phone'],
             });
     }
 }
