@@ -32,7 +32,9 @@
   },
   "build": {
     "linux": {
-      "target": ["deb"]
+      "target": [
+        "deb"
+      ]
     }
   }
 }

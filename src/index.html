@@ -42,7 +42,8 @@
                     <md-icon md-svg-src="./assets/icons/settings.svg"></md-icon>
                 </md-button>
             </div>
-            <div ng-if="!loading && (!auth.ed || (auth.ed && users.length != 0))" class="md-toolbar-tools big-toolbar" ng-class="{'more-big': !auth.ed}"></div>
+            <div ng-if="!loading && (!auth.ed || (auth.ed && users.length != 0))" class="md-toolbar-tools big-toolbar"
+                ng-class="{'more-big': !auth.ed}"></div>
         </md-toolbar>
 
         <md-progress-linear class="md-accent" ng-if="loading" md-mode="indeterminate"></md-progress-linear>
@@ -56,7 +57,8 @@
                     </md-card-title-text>
                 </md-card-title>
                 <md-card-actions layout="row">
-                    <md-button style="margin-left: 0px;" class="md-icon-button" ng-click="askForDelete($event, $index)">
+                    <md-button style="margin-left: 0px;" class="md-icon-button"
+                        ng-click="askForDelete($event, item.id, $index)">
                         <md-tooltip md-direction="top">Delete my friend</md-tooltip>
                         <md-icon md-svg-src="./assets/icons/delete.svg"></md-icon>
                     </md-button>

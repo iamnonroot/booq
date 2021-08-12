@@ -12,8 +12,7 @@ const rayconnect = new Rayconnect({
 
 let win, tray;
 
-let user = [], // logined user tokens
-    friends = []; // user friends
+let friends = []; // user friends
 
 function createWindow() {
     win = new BrowserWindow({
@@ -70,9 +69,8 @@ app.on('window-all-closed', function () {
 ipcMain.on('auth', async (res, req = { token: '' }) => {
     await rayconnect.Auth(req.token);
     let phone = rayconnect.user.uid;
-    await afterAuth(phone, req.token);
+    await afterAuth(phone);
     res.reply('auth', { friends });
-    await subscribe(phone, token);
 });
 
 ipcMain.on('auth:send', async (res, req = { phone: '' }) => {
@@ -87,36 +85,45 @@ ipcMain.on('auth:verify', async (res, req = { phone: '', code: '' }) => {
 
 ipcMain.on('auth:kill', async () => {
     let phone = rayconnect.user.uid, token = rayconnect.user.token;
-    await unsubscribe(phone, token);
 });
 
-ipcMain.on('friend:create', async (res, req = { fullname: '', phone: '' }) => {
-    let phone = rayconnect.user.uid;
-    await createMyFriend(phone, req);
-    res.reply('friend:create');
+ipcMain.on('friend:create', async (res, req) => {
+    try {
+        let phone = rayconnect.user.uid;
+        const data = await createMyFriend(phone, req);
+         res.reply('friend:added', { data });
+
+        
+    } catch (error) {
+        
+        console.log("error [21]")
+        console.log(error)
+    }
 });
 
-ipcMain.on('friend:update', async (res, req = { index: -1, fullname: '', phone: '' }) => {
+ipcMain.on('friend:update', async (res, req = { id: '', fullname: '', phone: '' }) => {
     let phone = rayconnect.user.uid;
-    await updateMyFriend(phone, req.index, { fullname: req.fullname, phone: req.phone });
+    console.log(req)
+    await updateMyFriend(phone, { id: req.id, fullname: req.fullname, phone: req.phone });
     res.reply('friend:update');
 });
 
-ipcMain.on('friend:delete', async (res, req = { index: -1 }) => {
+ipcMain.on('friend:delete', async (res, req = { id: '' }) => {
     let phone = rayconnect.user.uid;
-    await deleteMyFriend(phone, req.index);
+    await deleteMyFriend(phone, req.id);
     res.reply('friend:delete');
 });
 
 // to : want booq for who by his/her phone number
 ipcMain.on('booq', async (res, req = { audio: 'off', to: '' }) => {
-    let tokens = await getUserTokensByPhone(req.to);
-    if (tokens == null || Array.isArray(tokens) == false || tokens.length == 0) {
+
+    try {
+
         let phone = rayconnect.user.uid; // user phone number
-        rayconnect.execQuery({
+        await rayconnect.execQuery({
             'address': 'booqing',
-            'uniqueID': to,
-            'TokenID': tokens.lastItem,
+            'uniqueID': req.to,
+            'TokenID': '*',
             'scope': 'ring',
             'info': {
                 'method': 'GET',
@@ -127,7 +134,11 @@ ipcMain.on('booq', async (res, req = { audio: 'off', to: '' }) => {
                 }
             }
         });
+    } catch (error) {
+
+        console.log(error)
     }
+
 });
 
 rayconnect.Query({
@@ -151,73 +162,37 @@ function pauseAudio() {
     win.webContents.send('audio', { 'audio': 'off' });
 }
 
-async function afterAuth(phone = '', token = '') {
-    let tokens = await getUserTokensByPhone(phone), friend = await getFriendsByPhone(phone);
-    if (tokens == null || Array.isArray(tokens) == false || tokens.length == 0) {
-        user = [token];
-        createUserTokensByPhone(phone, user);
-    } else {
-        user = tokens;
-    }
-
-    if (friend == null || Array.isArray(friend) == false || friend.length == 0) {
-        friends = [];
-        createFriendsByPhone(phone);
-    } else {
-        friends = friend;
-    }
-}
-
-async function subscribe(phone = '', token = '') {
-    if (user.includes(token) == false) {
-        user.push(token);
-        await setUserTokensByPhone(phone, user);
-    }
-}
-
-async function unsubscribe(phone = '', token = '') {
-    let index = user.indexOf(token);
-    if (index != -1) {
-        user.splice(index, 1);
-        await setUserTokensByPhone(phone, user);
-    }
-}
-
-async function createUserTokensByPhone(phone = '', tokens = []) {
-    return await rayconnect.store.update(`user:${phone}`, tokens);
-}
-
-async function setUserTokensByPhone(phone = '', tokens = []) {
-    return await rayconnect.store.update(`user:${phone}`, tokens);
-}
-
-async function getUserTokensByPhone(phone = '') {
-    return await rayconnect.store.find(`user:${phone}`);
+async function afterAuth(phone = '') {
+    friends = await getFriendsByPhone(phone);
+    const result = friends.map((el) => {
+        if (el.friend) {
+            el.friend.id = el.id
+            return el.friend
+        } else {
+            return el
+        }
+    })
+    friends = result
+    return true
 }
 
 async function getFriendsByPhone(phone = '') {
-    return await rayconnect.store.find(`friends:${phone}`);
+    return rayconnect.store.findAll(`friends:${phone}`);
 }
 
-async function setFriendsByPhone(phone = '') {
-    return await rayconnect.store.update(`friends:${phone}`);
+async function setFriendsByPhone(phone = '', friend) {
+    return rayconnect.store.update(`friends:${phone}`, friend.id, friend);
 }
 
-async function createFriendsByPhone(phone = '') {
-    return await rayconnect.store.add(`friends:${phone}`);
-}
 
-async function updateMyFriend(phone = '', index = -1, firend = {}) {
-    friends[index] = firend;
-    await setFriendsByPhone(phone);
+async function updateMyFriend(phone = '', friend = {}) {
+    return setFriendsByPhone(phone, friend);
 }
 
 async function createMyFriend(phone = '', friend = {}) {
-    friends.push(friend);
-    await setFriendsByPhone(phone);
-}
+    return rayconnect.store.add(`friends:${phone}`, { friend: friend });
 
-async function deleteMyFriend(phone = '', index = -1) {
-    friends.splice(index, 1);
-    await setFriendsByPhone(phone);
+}
+async function deleteMyFriend(phone = '', id = '') {
+    return rayconnect.store.remove(`friends:${phone}`, id)
 }
