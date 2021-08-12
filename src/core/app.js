@@ -48,10 +48,21 @@ app.run(($rootScope) => {
 });
 
 app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
+
+    ipcRenderer.on('friend:added', (_, res) => {
+        $rootScope.users.push(res.data.friend)
+        $scope.$apply();
+
+    })
+
+
     ipcRenderer.on('auth', (_, res = { friends: [] }) => {
         $scope.auth.ed = true;
         $scope.loading = false;
         $rootScope.users = res.friends || [];
+
+        $scope.$apply();
+
     })
 
     ipcRenderer.on('auth:send', (_, res = { status: false }) => {
@@ -160,11 +171,12 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
     }
 
     $scope.openFriendDialog = (event, index = null) => {
-        let fullname = '', phone = '';
+        let fullname = '', phone = '', id = '';
 
         if (index != null) {
             fullname = $scope.users[index]['fullname'];
             phone = $scope.users[index]['phone'];
+            id = $scope.users[index]['id']
         }
 
         $mdDialog.show({
@@ -176,24 +188,33 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
             locals: {
                 user: {
                     fullname: fullname,
-                    phone: phone
+                    phone: phone,
                 }
             }
         }).then((result) => {
             if (result == null) return;
-            if (index == null) $rootScope.users.push(result);
-            else $rootScope.users[index] = result;
+            if (index == null) ipcRenderer.send('friend:create', result)
+            else { 
+                 result.id = id;
+                ipcRenderer.send('friend:update', result)
+                $rootScope.users[index] = result 
+            };
         });
     }
 
-    $scope.askForDelete = (event, index) => {
+    $scope.askForDelete = (event, id, index) => {
         $scope.askForConfirm(event, {
             title: 'Delete your friend',
             content: 'Are you upset with your friend and want to delete it?',
             no: 'No',
             yes: 'Yes'
         }, () => {
+            ipcRenderer.send('friend:delete', {
+                id
+            })
+
             $rootScope.users.splice(index, 1);
+
             $scope.makeToast('Bye Bye my friend !')
         });
     }
