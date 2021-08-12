@@ -91,11 +91,8 @@ ipcMain.on('friend:create', async (res, req) => {
     try {
         let phone = rayconnect.user.uid;
         const data = await createMyFriend(phone, req);
-         res.reply('friend:added', { data });
-
-        
+        res.reply('friend:added', { data });
     } catch (error) {
-        
         console.log("error [21]")
         console.log(error)
     }
@@ -118,7 +115,6 @@ ipcMain.on('friend:delete', async (res, req = { id: '' }) => {
 ipcMain.on('booq', async (res, req = { audio: 'off', to: '' }) => {
 
     try {
-
         let phone = rayconnect.user.uid; // user phone number
         await rayconnect.execQuery({
             'address': 'booqing',
