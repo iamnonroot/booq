@@ -207,6 +207,7 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
     }
 
     $scope.init = async () => {
+        document.body.removeAttribute('style');
         let token = await storage.get('rayconnect-token');
         if (!token) {
             $scope.loading = false;

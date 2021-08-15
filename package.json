@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder -wl"
   },
   "keywords": [],
   "author": {
@@ -32,6 +32,9 @@
     "electron-builder": "^22.11.7"
   },
   "build": {
+    "compression": "maximum",
+    "productName": "Booq",
+    "appId": "ir.iamroot.booq",
     "linux": {
       "target": [
         "deb",

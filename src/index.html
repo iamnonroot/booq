@@ -7,12 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Booq App</title>
 
-    <link rel="stylesheet" href="./assets/script/angular-material/angular-material.css">
+    <script src="./assets/script/angular.bundle.js"></script>
 
     <link rel="stylesheet" href="./style/style.css">
 </head>
 
-<body ng-app="app" ng-controller="ctrl" md-theme="{{theme}}" md-theme-watch="">
+<body style="display: none;" ng-app="app" ng-controller="ctrl" md-theme="{{theme}}" md-theme-watch="">
     <md-toolbar class="app-bar md-primary md-hue-2">
         <div class="md-toolbar-tools">
 
@@ -115,13 +115,6 @@
             <md-icon md-svg-src="./assets/icons/add.svg"></md-icon>
         </md-button>
     </main>
-
-    <script src="./assets/script/angular/angular.js"></script>
-    <script src="./assets/script/angular-aria/angular-aria.js"></script>
-    <script src="./assets/script/angular-animate/angular-animate.js"></script>
-    <script src="./assets/script/angular-messages/angular-messages.js"></script>
-    <script src="./assets/script/angular-material/angular-material.js"></script>
-
     <script src="./core/app.js"></script>
 </body>
 
