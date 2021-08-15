@@ -12,44 +12,49 @@
     <link rel="stylesheet" href="./style/style.css">
 </head>
 
-<body ng-app="app" ng-controller="ctrl">
-    <div class="app-bar">
-        <md-icon style="margin-left: 8px;" aria-label="Logo" md-svg-src="./assets/icons/not-mute.svg">
-        </md-icon>
-        <span class="title">Booq</span>
-        <div class="flex"></div>
-        <button ng-click="minimize()">
-            <md-icon md-svg-src="./assets/icons/minimize.svg"></md-icon>
-        </button>
-        <button ng-click="close()">
-            <md-icon md-svg-src="./assets/icons/close.svg"></md-icon>
-        </button>
-    </div>
+<body ng-app="app" ng-controller="ctrl" md-theme="{{theme}}" md-theme-watch="">
+    <md-toolbar class="app-bar md-primary md-hue-2">
+        <div class="md-toolbar-tools">
+
+            <md-icon ng-if="online" aria-label="Logo" md-svg-src="./assets/icons/not-mute.svg">
+            </md-icon>
+            <md-icon ng-if="!online" aria-label="Logo" md-svg-src="./assets/icons/mute.svg">
+            </md-icon>
+            <span class="title">Booq{{ing?'ing':''}}</span>
+            <div class="flex"></div>
+            <button ng-click="minimize()">
+                <md-icon md-svg-src="./assets/icons/minimize.svg"></md-icon>
+            </button>
+            <button ng-click="close()">
+                <md-icon md-svg-src="./assets/icons/close.svg"></md-icon>
+            </button>
+        </div>
+    </md-toolbar>
+
+    <md-toolbar class="fixed">
+        <div class="md-toolbar-tools">
+            <h2>Booq</h2>
+            <span flex></span>
+            <md-button ng-if="auth.ed == true" class="md-icon-button" ng-disabled="loading"
+                ng-click="openSettings($event)">
+                <md-tooltip md-direction="bottom">Settings</md-tooltip>
+                <md-icon md-svg-src="./assets/icons/settings.svg"></md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
 
     <main id="body">
-        <md-toolbar>
-            <div class="md-toolbar-tools fixed">
-                <h2>Booq</h2>
-                <span flex></span>
-                <md-switch ng-if="auth.ed == true" md-invert ng-disabled="loading" ng-model="online"
-                    aria-label="Online/Offline">
-                    <span style="font-size: 14px;">{{online ? 'Online' : 'Offline'}}</span>
-                </md-switch>
-
-                <md-button ng-if="auth.ed == true" class="md-icon-button" ng-disabled="loading"
-                    ng-click="openSettings($event)">
-                    <md-tooltip md-direction="bottom">Settings</md-tooltip>
-                    <md-icon md-svg-src="./assets/icons/settings.svg"></md-icon>
-                </md-button>
+        <md-toolbar ng-if="!loading && (!auth.ed || (auth.ed && users.length != 0))">
+            <div class="md-toolbar-tools big-toolbar" layout="row" layout-align="center center"
+                ng-class="{'more-big': !auth.ed}">
+                <md-button style="margin-top: -80px;" ng-if="ing" ng-click="okey()">f**k off</md-button>
             </div>
-            <div ng-if="!loading && (!auth.ed || (auth.ed && users.length != 0))" class="md-toolbar-tools big-toolbar"
-                ng-class="{'more-big': !auth.ed}"></div>
         </md-toolbar>
 
         <md-progress-linear class="md-accent" ng-if="loading" md-mode="indeterminate"></md-progress-linear>
 
-        <div class="container cards" ng-if="!loading && auth.ed == true">
-            <md-card ng-repeat="item in users">
+        <div class="container cards" ng-if="!loading && auth.ed == true" ng-class="{'less-top': ing}">
+            <md-card ng-repeat="item in users" ng-class="{'booqing': by == item.phone}">
                 <md-card-title>
                     <md-card-title-text>
                         <span class="md-headline">{{item.fullname}}</span>

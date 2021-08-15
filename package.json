@@ -1,6 +1,6 @@
 {
   "name": "booq",
-  "version": "0.0.1-alpha",
+  "version": "0.0.1-beta",
   "description": "Make a booq for your friends and make them awake !",
   "main": "app.js",
   "scripts": {
@@ -21,10 +21,11 @@
     "angular-aria": "^1.8.2",
     "angular-material": "^1.2.3",
     "angular-messages": "^1.8.2",
+    "auto-launch": "^5.0.5",
     "electron-settings": "^4.0.2",
     "loudness": "^0.4.1",
     "material-design-icons": "^3.0.1",
-    "rayconnect-client": "^0.11.50"
+    "rayconnect-client": "^0.11.63"
   },
   "devDependencies": {
     "electron": "^13.1.9",
@@ -33,7 +34,8 @@
   "build": {
     "linux": {
       "target": [
-        "deb"
+        "deb",
+        "AppImage"
       ]
     }
   }

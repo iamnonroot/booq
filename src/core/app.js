@@ -1,50 +1,151 @@
-const electron = require('electron'), ipcRenderer = electron.ipcRenderer, storage = require('electron-settings'), loudness = require('loudness');
+const { existsSync } = require('fs');
+
+const electron = require('electron'),
+    ipcRenderer = electron.ipcRenderer,
+    storage = require('electron-settings'),
+    loudness = require('loudness'),
+    AutoLaunch = require('auto-launch'),
+    path = require('path');
+
+const autolaunch = new AutoLaunch({
+    name: 'Booq',
+    path: electron.remote.app.getPath("exe"),
+});
 
 const app = angular.module('app', ['ngMaterial', 'ngMessages']);
 
-let audio = new Audio('./assets/airhorn.mp3');
-audio.load();
+const assets = path.join(electron.remote.app.getAppPath(), 'src', 'assets');
+
+const sounds = [
+    {
+        name: 'Air horn',
+        path: path.join(assets, 'sounds', 'airhorn.mp3')
+    },
+    {
+        name: 'Fart',
+        path: path.join(assets, 'sounds', 'fart.mp3')
+    },
+    {
+        name: 'War horn',
+        path: path.join(assets, 'sounds', 'war-horn.wav')
+    }
+];
+
+let audio = new Audio();
 audio.loop = true;
 
 let notification, vol = 0;
 
-app.run(($rootScope) => {
+app.config(($mdThemingProvider) => {
+    $mdThemingProvider.theme('dark')
+        .primaryPalette('indigo', {
+            'default': '800',
+            'hue-2': '900'
+        })
+        .accentPalette('amber').dark();
+
+    $mdThemingProvider.theme('blue')
+        .primaryPalette('blue')
+        .accentPalette('amber');
+
+    $mdThemingProvider.theme('green')
+        .primaryPalette('green')
+        .accentPalette('orange');
+
+    $mdThemingProvider.theme('cyan')
+        .primaryPalette('cyan')
+        .accentPalette('amber');
+
+    $mdThemingProvider.theme('amber')
+        .primaryPalette('amber')
+        .accentPalette('blue');
+
+    $mdThemingProvider.theme('red')
+        .primaryPalette('red')
+        .accentPalette('blue');
+
+    $mdThemingProvider.theme('pink')
+        .primaryPalette('pink')
+        .accentPalette('blue');
+});
+
+app.run(async ($rootScope) => {
+    $rootScope.theme = await storage.get('theme') || 'default';
+
     $rootScope.version = electron.remote.app.getVersion();
 
-    $rootScope.notification = false;
+    $rootScope.lastversion = null;
+
+    $rootScope.notification = true;
+
+    $rootScope.volume = 100;
+
+    $rootScope.sound = -1;
+
+    $rootScope.soundPath = null;
 
     $rootScope.online = true;
+
+    $rootScope.by = null;
+
+    $rootScope.ing = false;
 
     $rootScope.users = [];
 
     ipcRenderer.on('audio', async (_, res = { audio: 'off', phone: '' }) => {
-        audio.currentTime = 0;
-        if (res.audio == 'on') {
-            vol = await loudness.getVolume();
-            await loudness.setVolume(100);
-            audio.play();
-
-            if (rootScope.notification == true) {
-                let body = 'Some friend is booqing you !';
-                if (res.phone && res.phone.length == 11) {
-                    let index = $rootScope.users.findIndex(item => item.phone == res.phone);
-                    if (index != -1) body = `${$rootScope.users[index]['fullname']} as your friend is booqing you !`;
-                }
-                notification = new electron.remote.Notification({
-                    'title': 'BooQ',
-                    'body': body,
-                    'actions': 'STOP',
-                });
-                notification.show();
-                notification.on('click', () => pauseAudio());
-                notification.on('close', () => pauseAudio());
-            }
+        if ($rootScope.online == false) return;
+        if ($rootScope.soundPath && existsSync($rootScope.soundPath) == false) {
+            $rootScope.sound = 0;
+            $rootScope.soundPath = null;
+            audio.src = sounds[0].path;
+            audio.load();
+            await storage.set('sound:path', null);
+        }
+        if (res.audio == 'on' && $rootScope.ing == false) {
+            $rootScope.ing = true;
+            $rootScope.by = res.phone && res.phone.length == 11 ? res.phone : null;
+            $rootScope.$apply();
+            on(res);
         } else {
-            if (notification) notification.close();
-            audio.pause();
-            await loudness.setVolume(vol);
+            audio.loop = false;
+            audio.onended = () => off();
         }
     });
+
+    async function on(res) {
+        vol = await loudness.getVolume();
+        await loudness.setVolume($rootScope.volume);
+        audio.currentTime = 0;
+        audio.loop = true;
+        audio.onended = null;
+        audio.play();
+
+        if ($rootScope.notification == true) {
+            let body = 'Some friend is booqing you !';
+            if (res.phone && res.phone.length == 11) {
+                let index = $rootScope.users.findIndex(item => item.phone == res.phone);
+                if (index != -1) body = `${$rootScope.users[index]['fullname']} as your friend is booqing you !`;
+            }
+            notification = new electron.remote.Notification({
+                'title': 'BooQ',
+                'body': body,
+                'actions': 'STOP',
+            });
+            notification.show();
+            notification.on('click', () => pauseAudio());
+            notification.on('close', () => pauseAudio());
+        }
+    }
+
+    async function off() {
+        $rootScope.ing = false;
+        $rootScope.by = null;
+        $rootScope.$apply();
+        if (notification) notification.close();
+        audio.pause();
+        audio.currentTime = 0;
+        await loudness.setVolume(vol);
+    }
 });
 
 app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
@@ -54,7 +155,6 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         $scope.$apply();
 
     })
-
 
     ipcRenderer.on('auth', (_, res = { friends: [] }) => {
         $scope.auth.ed = true;
@@ -99,7 +199,12 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         'ing': false,
         'ed': false
     };
+
     $scope.loading = true;
+
+    $scope.onOnlineChange = (event) => {
+        $rootScope.online = event;
+    }
 
     $scope.init = async () => {
         let token = await storage.get('rayconnect-token');
@@ -109,7 +214,34 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         } else {
             ipcRenderer.send('auth', { token });
         }
+
+        let notification = await storage.get('notification'),
+            volume = await storage.get('volume'),
+            sound = await storage.get('sound'),
+            soundPath = await storage.get('sound:path');
+
+
+        if (notification)
+            $rootScope.notification = notification == 'true' ? true : false;
+
+        if (volume)
+            $rootScope.volume = parseInt(volume);
+
+        if (soundPath) {
+            if (existsSync(soundPath))
+                $rootScope.soundPath = soundPath;
+            else {
+                sound = '0';
+                await storage.set('sound:path', null);
+            }
+        } else if (sound == '-1') sound = '0';
+
+        $rootScope.sound = sound ? parseInt(sound) : 0;
+
+        audio.src = soundPath && $rootScope.sound == -1 ? soundPath : sounds[$rootScope.sound].path;
+        audio.load();
     }
+
     $scope.minimize = () => {
         electron.remote.getCurrentWindow().minimize();
     }
@@ -182,7 +314,7 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         $mdDialog.show({
             controller: FormControl,
             templateUrl: './template/form.html',
-            parent: angular.element(document.getElementById('body')),
+            parent: angular.element(document.body),
             targetEvent: event,
             focusOnOpen: false,
             locals: {
@@ -223,7 +355,7 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         $mdDialog.show({
             controller: ConfirmControl,
             templateUrl: './template/confirm.html',
-            parent: angular.element(document.getElementById('body')),
+            parent: angular.element(document.body),
             targetEvent: event,
             locals: {
                 data
@@ -243,7 +375,7 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         $mdDialog.show({
             controller: SettingsControl,
             templateUrl: './template/settings.html',
-            parent: angular.element(document.getElementById('body')),
+            parent: angular.element(document.body),
             targetEvent: event,
             focusOnOpen: false,
         }).then((res) => {
@@ -255,13 +387,23 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         $mdDialog.show({
             controller: BigButtonControl,
             templateUrl: './template/big-button.html',
-            parent: angular.element(document.getElementById('body')),
+            parent: angular.element(document.body),
             targetEvent: event,
             focusOnOpen: false,
             locals: {
                 index
             }
         });
+    }
+
+    $scope.okey = async () => {
+        $rootScope.ing = false;
+        $rootScope.by = null;
+        if (notification) notification.close();
+        audio.pause();
+        audio.currentTime = 0;
+        await loudness.setVolume(vol);
+        $rootScope.$apply();
     }
 
     $scope.init();
@@ -302,21 +444,154 @@ function ConfirmControl($scope, $mdDialog, data) {
     }
 }
 
-function SettingsControl($scope, $rootScope, $mdDialog) {
+function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
+    $scope.view = null;
+    $scope.colors = ['default', 'blue', 'cyan', 'green', 'amber', 'red', 'pink'];
     $scope.version = $rootScope.version;
     $scope.notification = $rootScope.notification;
+    $scope.online = $rootScope.online;
+    $scope.lastversion = $rootScope.lastversion;
+    $scope.volume = $rootScope.volume;
+    $scope.launchable = null;
+    $scope.sounds = sounds;
+    $scope.sound = $rootScope.sound;
+    $scope.soundPath = $rootScope.soundPath;
+    $scope.playing = null;
 
-    $scope.onNotificationChange = () => {
-        $rootScope.notification = $scope.notification;
+    $scope.setView = (to = null) => {
+        $scope.view = to;
+    }
+
+    $scope.setTheme = (name) => {
+        $rootScope.theme = name;
+        storage.set('theme', name);
+    }
+
+    $scope.onModeChange = (event) => {
+        $scope.setTheme(event ? 'dark' : 'default');
+    }
+
+    $scope.onNotificationChange = (event) => {
+        $rootScope.notification = event;
+        storage.set('notification', event.toString());
+    }
+
+    $scope.onOnlineChange = (event) => {
+        $rootScope.online = event;
+    }
+
+    $scope.onVolumeChange = (event) => {
+        $rootScope.volume = event;
+        storage.set('volume', event.toString());
     }
 
     $scope.close = () => {
         $mdDialog.hide();
+        sound.pause();
     }
 
     $scope.logout = () => {
         $mdDialog.hide('logout');
     }
+
+    $scope.checkForUpdate = async () => {
+        try {
+            let res = await (await fetch('https://raw.githubusercontent.com/iamnonroot/booq/main/package.json')).json();
+            if (res && res['version']) {
+                $scope.lastversion = res['version'];
+                $rootScope.lastversion = res['version'];
+                $scope.$apply();
+            }
+        } catch (error) {
+            $scope.lastversion = $scope.version;
+            $rootScope.lastversion = $scope.version;
+            $scope.$apply();
+        }
+    }
+
+    $scope.showDownloadPage = () => {
+        if ($scope.lastversion != $scope.version) {
+            electron.shell.openExternal('https://github.com/iamnonroot/booq/releases');
+        }
+    }
+
+    $scope.checkAutoLaunch = async () => {
+        $scope.launchable = await autolaunch.isEnabled();
+    }
+
+    $scope.setAutoLaunch = async (event) => {
+        console.log(event);
+        event ? await autolaunch.enable() : await autolaunch.disable();
+    }
+
+    let sound = new Audio();
+
+    $scope.soundOf = (index) => {
+        if ($scope.playing == index) {
+            sound.pause();
+            sound.onended = null;
+            sound.currentTime = 0;
+            $scope.playing = null;
+        } else {
+            sound.pause();
+            sound.src = index == -1 ? $scope.soundPath : sounds[index].path;
+            sound.load();
+            sound.currentTime = 0;
+            sound.play();
+            sound.onended = () => {
+                $scope.soundOf(index);
+                $scope.$apply();
+            }
+            $scope.playing = index;
+        }
+    }
+
+    $scope.onSoundChange = async (index) => {
+        sound.pause();
+        sound.currentTime = 0;
+
+        if (index != -1) {
+            $scope.soundPath = null;
+            await storage.set('sound:path', null);
+        } else {
+            await storage.set('sound:path', $scope.soundPath)
+        }
+        $rootScope.sound = index;
+        $scope.sound = index;
+        $scope.playing = null;
+        storage.set('sound', index.toString());
+        audio.src = index == -1 ? $scope.soundPath : sounds[index].path;
+        audio.load();
+        $scope.$apply();
+    }
+
+    $scope.selectSound = () => {
+        electron.remote.dialog.showOpenDialog({
+            properties: ['openFile'], filters: [
+                {
+                    name: 'Sound',
+                    extensions: ['mp3']
+                }
+            ]
+        }).then(result => {
+            if (result.filePaths && result.filePaths.length != 0) {
+                let file = result.filePaths[0];
+                $scope.soundPath = file;
+                $rootScope.soundPath = file;
+                $scope.onSoundChange(-1);
+            }
+        }).catch(error => {
+            console.log(error);
+        })
+    }
+
+    if ($scope.lastversion == null) {
+        $timeout(() => {
+            $scope.checkForUpdate();
+        }, 1000);
+    }
+
+    $scope.checkAutoLaunch();
 }
 
 function BigButtonControl($scope, $rootScope, $mdDialog, index) {

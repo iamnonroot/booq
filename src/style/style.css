@@ -4,36 +4,71 @@
 
 body {
     overflow: hidden;
+
+    position: relative;
 }
 
-div.app-bar {
-    position: fixed;
+body[md-theme="dark"] {
+    background-color: #616161;
+}
+
+/* total width */
+::-webkit-scrollbar {
+    background-color: transparent;
+    width: 6px;
+}
+
+/* background of the scrollbar except button or resizer */
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+/* scrollbar itself */
+::-webkit-scrollbar-thumb {
+    background-color: #bdbdbd;
+    border-radius: 16px;
+}
+
+/* set button(top and bottom of the scrollbar) */
+::-webkit-scrollbar-button {
+    display: none;
+}
+
+md-toolbar.app-bar {
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
 
     height: 32px;
+    line-height: 32px !important;
+    min-height: 32px !important;
 
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
 
-    background-color: #303f9f;
-    color: #fff;
-
     z-index: 1000000;
 }
 
-div.app-bar span.title {
-    margin-left: 8px;
+md-toolbar.app-bar .md-toolbar-tools {
+    height: 32px;
+    line-height: 32px !important;
+    min-height: 32px !important;
+    padding-right: 0 !important;
 }
 
-div.app-bar div.flex {
+md-toolbar.app-bar span.title {
+    margin-left: 8px;
+    font-size: 15px;
+}
+
+md-toolbar.app-bar div.flex {
     height: 32px;
     -webkit-app-region: drag;
 }
 
-div.app-bar button {
+md-toolbar.app-bar button {
     width: 32px;
     height: 32px;
 
@@ -46,8 +81,7 @@ div.app-bar button {
     justify-content: center;
 }
 
-div.app-bar md-icon {
-    color: #fff;
+md-toolbar.app-bar md-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
@@ -58,36 +92,49 @@ div.app-bar md-icon {
 main {
     top: 32px;
 
-    height: calc(100vh - 32px);
+    height: calc(100vh - (32px + 56px));
 
     position: relative;
 
     overflow-x: hidden;
+    overflow-y: overlay;
 }
 
 md-switch:not([disabled]) .md-container {
     cursor: pointer !important;
 }
 
-md-toolbar {
+md-toolbar,
+md-toolbar .md-toolbar-tools {
+    line-height: 56px !important;
     min-height: 56px !important;
 }
 
-.md-toolbar-tools.fixed {
+md-toolbar.fixed {
+    line-height: 56px !important;
     height: 56px !important;
     max-height: 56px !important;
-    position: fixed;
+
+    position: relative;
     top: 32px;
+
+    z-index: 20;
 }
 
 .md-toolbar-tools.big-toolbar {
-    height: 160px !important;
-    max-height: 160px !important;
+    height: 130px !important;
+    max-height: 130px !important;
 }
 
 .md-toolbar-tools.big-toolbar.more-big {
-    height: 200px !important;
-    max-height: 200px !important;
+    height: 170px !important;
+    max-height: 170px !important;
+}
+
+md-progress-linear {
+    position: fixed;
+    top: calc(32px + 56px);
+    z-index: 19;
 }
 
 .md-fab.add {
@@ -118,20 +165,25 @@ div.form-container md-input-container {
 div.container {
     position: relative;
 
-    top: -80px;
-
-    padding: 0 20px 50px 20px;
+    top: -70px;
 
     z-index: 9;
 }
 
+div.container:not(.less-top) {
+    top: -100px;
+}
+
 div.container.cards {
     display: flex;
-    flex-wrap: wrap;
 }
 
 div.container.cards md-card {
     width: 350px;
+}
+
+div.container.cards md-card.booqing {
+    animation: shake 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955) both infinite;
 }
 
 div.container.auth {
@@ -152,9 +204,138 @@ div.auth-container md-input-container {
     margin-bottom: 40px;
 }
 
+div.divider {
+    width: 1px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.12);
+}
+
+div.colors {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+div.color {
+    width: 20px;
+    height: 20px;
+
+    border-radius: 50%;
+
+    position: relative;
+
+    cursor: pointer;
+
+    margin-right: 8px;
+}
+
+div.color::after {
+    content: "";
+
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: 8px;
+    height: 8px;
+
+    background-color: #fff;
+
+    border-radius: 50%;
+
+    opacity: 0;
+
+    transition: all 0.3s;
+}
+
+div.color.selected::after {
+    opacity: 1;
+}
+
+div.color.default {
+    background-color: #3f51b5;
+}
+
+div.color.blue {
+    background-color: #2196f3;
+}
+
+div.color.cyan {
+    background-color: #00bcd4;
+}
+
+div.color.green {
+    background-color: #4caf50;
+}
+
+div.color.amber {
+    background-color: #ffc107;
+}
+
+div.color.red {
+    background-color: #f44336;
+}
+
+div.color.pink {
+    background-color: #e91e63;
+}
+
+@media screen and (min-width: 773px) {
+    div.container.cards {
+        flex-wrap: wrap;
+
+        width: calc(100vw - 40px);
+        margin-left: 20px;
+    }
+}
+
+@media screen and (max-width: 772px) {
+    div.container.cards {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    div.container.cards md-card {
+        width: 90vw;
+    }
+}
+
 @media screen and (min-height: 800px) {
     .md-toolbar-tools.big-toolbar.more-big {
         height: 260px !important;
         max-height: 260px !important;
+    }
+}
+
+@keyframes shake {
+    0%,
+    100% {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70% {
+        -webkit-transform: translateX(-10px);
+        transform: translateX(-10px);
+    }
+    20%,
+    40%,
+    60% {
+        -webkit-transform: translateX(10px);
+        transform: translateX(10px);
+    }
+    80% {
+        -webkit-transform: translateX(8px);
+        transform: translateX(8px);
+    }
+    90% {
+        -webkit-transform: translateX(-8px);
+        transform: translateX(-8px);
     }
 }

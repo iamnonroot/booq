@@ -1,7 +1,10 @@
-<md-dialog aria-label="Your Friend Dialog">
+<md-dialog style="min-width: 400px; max-width: 400px; min-height: 320px;">
     <md-toolbar>
         <div class="md-toolbar-tools">
-            <h2>Your booq settings</h2>
+            <md-button ng-if="view != null" class="md-icon-button" aria-label="Back to settings" ng-click="setView()">
+                <md-icon md-svg-src="./assets/icons/back.svg"></md-icon>
+            </md-button>
+            <h2>{{view ? view : 'Your booq settings'}}</h2>
             <span flex></span>
             <md-button class="md-icon-button" aria-label="Close settings" ng-click="close()">
                 <md-tooltip md-direction="bottom">Close settings</md-tooltip>
@@ -10,29 +13,178 @@
         </div>
     </md-toolbar>
     <md-dialog-content style="min-width: 350px;">
-        <md-list>
+        <md-list flex ng-if="view == null">
+            <md-subheader>App settings</md-subheader>
+            <md-list-item class="md-2-line" layout="row" ng-click="setView('Auto launch')">
+                <md-icon style="margin-top: 15px;" md-svg-src="./assets/icons/auto-launch.svg"></md-icon>
+                <div class="md-list-item-text" layout="column">
+                    <span>Auto launch</span>
+                    <p style="margin-top: -10px;">{{launchable? 'On': 'Off'}}</p>
+                </div>
+                <span flex></span>
+                <div class="divider" style="height: 40px; margin-right: 12px;"></div>
+                <md-switch style="margin-top: 20px;" ng-model="launchable" ng-change="setAutoLaunch(launchable)"
+                    aria-label="launchable">
+                </md-switch>
+            </md-list-item>
             <md-list-item class="md-2-line" layout="row">
-                <md-icon md-svg-src="./assets/icons/notifications.svg"></md-icon>
+                <md-icon style="margin-top: 25px;" md-svg-src="./assets/icons/notifications.svg"></md-icon>
                 <div class="md-list-item-text" layout="column">
                     <span>Notification</span>
                     <p>{{notification? 'On': 'Off'}}</p>
                 </div>
                 <span flex></span>
-                <md-switch ng-model="notification" ng-change="onNotificationChange()" aria-label="notification">
+                <md-switch style="margin-top: 20px;" ng-model="notification"
+                    ng-change="onNotificationChange(notification)" aria-label="notification">
                 </md-switch>
             </md-list-item>
+            <md-list-item class="md-2-line" layout="row">
+                <md-icon style="margin-top: 25px;" md-svg-src="./assets/icons/do-not-disturb.svg"></md-icon>
+                <div class="md-list-item-text" layout="column">
+                    <span>Do not disturb</span>
+                    <p>{{online? 'On': 'Off'}}</p>
+                </div>
+                <span flex></span>
+                <md-switch style="margin-top: 20px;" ng-model="online" ng-change="onOnlineChange(online)"
+                    aria-label="online">
+                </md-switch>
+            </md-list-item>
+            <md-divider></md-divider>
+            <md-subheader>App theme</md-subheader>
+            <md-list-item class="md-2-line" layout="row">
+                <md-icon style="margin-top: 25px;" ng-if="dark" md-svg-src="./assets/icons/dark-mode.svg"></md-icon>
+                <md-icon style="margin-top: 25px;" ng-if="!dark" md-svg-src="./assets/icons/light-mode.svg"></md-icon>
+                <div class="md-list-item-text" layout="column">
+                    <span>Theme mode</span>
+                    <p>{{dark? 'Dark': 'Light'}}</p>
+                </div>
+                <span flex></span>
+                <md-switch style="margin-top: 20px;" ng-checked="theme == 'dark'" ng-model="dark"
+                    ng-change="onModeChange(dark)" aria-label="dark mode">
+                </md-switch>
+            </md-list-item>
+            <md-list-item class="md-1-line" layout="row" ng-if="!dark">
+                <span>Theme color</span>
+                <span flex></span>
+                <div class="colors">
+                    <div ng-repeat="item in colors" class="color" ng-class="{'selected': theme == item, [item]: true}"
+                        ng-click="setTheme(item)">
+                        <md-tooltip md-direction="top">{{item}}</md-tooltip>
+                    </div>
+                </div>
+            </md-list-item>
+            <md-divider></md-divider>
+            <md-subheader>Sound settings</md-subheader>
+            <md-list-item class="md-2-line" layout="row" ng-click="setView('Sounds')">
+                <div class="md-list-item-text" layout="column">
+                    <span>Sound</span>
+                    <p style="margin-top: -10px;">
+                        <ng-container ng-if="sound != -1">
+                            {{sounds[sound].name}}
+                        </ng-container>
+                        <ng-container ng-if="sound == -1 && soundPath != null">
+                            <marquee direction="right" scrollamount="5">{{soundPath}}
+                            </marquee>
+                        </ng-container>
+                    </p>
+                </div>
+                <span flex></span>
+                <md-icon md-svg-src="./assets/icons/right.svg"></md-icon>
+            </md-list-item>
+            <md-list-item class="md-2-line" layout="row">
+                <md-icon ng-if="volume != 0" style="margin-top: 17px;" aria-label="volume"
+                    md-svg-src="./assets/icons/not-mute.svg">
+                </md-icon>
+                <md-icon ng-if="volume == 0" style="margin-top: 17px;" aria-label="volume"
+                    md-svg-src="./assets/icons/mute.svg"></md-icon>
+                <div class="md-list-item-text" style="overflow: unset;" layout="column">
+                    <span style="position: relative; top: 10px;">Volume</span>
+                    <p style="padding: 0;" layout="row">
+                        <md-slider aria-label="volume" style="width: 100%;" ng-model="volume"
+                            ng-change="onVolumeChange(volume)" md-discrete="" step="1" min="0" max="100">
+                        </md-slider>
+                        <span
+                            style="margin-top: 10px; margin-left: 10px; width: 25px; max-width: 25px; min-width: 25px;">{{volume}}</span>
+                    </p>
+                </div>
+            </md-list-item>
+            <md-divider></md-divider>
+            <md-subheader>Account settings</md-subheader>
             <md-list-item class="md-1-line" ng-click="logout()">
                 <div class="md-list-item-text" layout="row">
                     <md-icon md-svg-src="./assets/icons/logout.svg"></md-icon>
                     <span style="margin-left: 12px; margin-top: 4px;">Logout</span>
                 </div>
             </md-list-item>
+            <md-divider></md-divider>
+            <md-subheader>App info</md-subheader>
             <md-list-item class="md-2-line">
                 <div class="md-list-item-text" layout="column">
                     <span>Version</span>
                     <p>{{version}}</p>
                 </div>
+                <md-progress-circular style="margin-top: 25px; margin-right: 10px;" ng-if="lastversion == null"
+                    md-mode="indeterminate" md-diameter="25px"></md-progress-circular>
+                <md-button style="margin-top: 20px; margin-right: 0;" aria-label="update-app"
+                    ng-if="lastversion != null" class="md-icon-button" ng-click="showDownloadPage()">
+                    <md-tooltip md-direction="left" style="margin-right: -20px;">{{lastversion == version?'You have
+                        latest vesion':'You have a update'}}</md-tooltip>
+                    <md-icon ng-if="lastversion == version" md-svg-src="./assets/icons/check-circle.svg"></md-icon>
+                    <md-icon ng-if="lastversion != version" md-svg-src="./assets/icons/download.svg"></md-icon>
+                </md-button>
             </md-list-item>
+        </md-list>
+        <md-list flex ng-if="view == 'Sounds'">
+            <md-subheader>Sound settings</md-subheader>
+            <md-radio-group ng-model="sound" ng-change="onSoundChange(sound)" aria-labelledby="sound">
+                <md-list-item class="md-2-line" ng-click="selectSound()">
+                    <md-radio-button style="margin-top: 25px;" aria-label="custom sound" value="-1"
+                        ng-disabled="soundPath == null">
+                    </md-radio-button>
+                    <div class="md-list-item-text" layout="column">
+                        <span>Custom sound</span>
+                        <p style="margin-top: -10px; max-width: 280px;">
+                            <marquee direction="right" scrollamount="5" ng-if="soundPath != null">{{soundPath}}
+                            </marquee>
+                        </p>
+                    </div>
+                    <span flex></span>
+                    <md-button ng-if="soundPath != null" class="md-icon-button" style="margin-right: 0;"
+                        aria-label="sound-play" ng-click="soundOf(-1)">
+                        <md-icon ng-if="playing != -1" md-svg-src="./assets/icons/play.svg"></md-icon>
+                        <md-icon ng-if="playing == -1" md-svg-src="./assets/icons/pause.svg"></md-icon>
+                    </md-button>
+                </md-list-item>
+                <md-divider></md-divider>
+                <md-list-item class="md-1-line" ng-repeat="item in sounds">
+                    <md-radio-button style="margin-top: 15px;" ng-value="$index">{{item.name}}</md-radio-button>
+                    <span flex></span>
+                    <md-button class="md-icon-button" style="margin-right: 0;" aria-label="sound-play"
+                        ng-click="soundOf($index)">
+                        <md-icon ng-if="playing != $index" md-svg-src="./assets/icons/play.svg"></md-icon>
+                        <md-icon ng-if="playing == $index" md-svg-src="./assets/icons/pause.svg"></md-icon>
+                    </md-button>
+                </md-list-item>
+            </md-radio-group>
+        </md-list>
+        <md-list ng-if="view == 'Auto launch'">
+            <md-list-item class="md-2-line" layout="row" ng-click="setView('Auto launch')">
+                <md-icon style="margin-top: 15px;" md-svg-src="./assets/icons/auto-launch.svg"></md-icon>
+                <div class="md-list-item-text" layout="column">
+                    <span>Auto launch</span>
+                    <p style="margin-top: -10px;">{{launchable? 'On': 'Off'}}</p>
+                </div>
+                <span flex></span>
+                <md-switch style="margin-top: 20px;" ng-model="launchable" ng-change="setAutoLaunch(launchable)"
+                    aria-label="launchable">
+                </md-switch>
+            </md-list-item>
+            <md-divider></md-divider>
+            <ng-content>
+                <p style="padding: 0 16px; line-height: 1.6;">
+                    With auto launch, your booq service will automatically start up after you turn on you computer.
+                </p>
+            </ng-content>
         </md-list>
     </md-dialog-content>
 </md-dialog>

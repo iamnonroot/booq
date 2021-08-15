@@ -37,6 +37,7 @@ function createWindow() {
 
     win.loadFile(path.join(__dirname, 'src', 'index.html'));
 
+
     tray = new Tray(path.join(__dirname, 'src', 'assets', 'image', 'logo.png'));
     tray.setToolTip('BooQ');
     tray.setContextMenu(Menu.buildFromTemplate([
@@ -100,7 +101,6 @@ ipcMain.on('friend:create', async (res, req) => {
 
 ipcMain.on('friend:update', async (res, req = { id: '', fullname: '', phone: '' }) => {
     let phone = rayconnect.user.uid;
-    console.log(req)
     await updateMyFriend(phone, { id: req.id, fullname: req.fullname, phone: req.phone });
     res.reply('friend:update');
 });
@@ -142,7 +142,6 @@ rayconnect.Query({
     'method': 'GET',
     'scope': 'ring'
 }, (res) => {
-    console.log(res);
     if (res.data['audio'] == 'on') {
         let phone = res.data['phone'] || '';
         playAudio(phone);
@@ -180,7 +179,6 @@ async function getFriendsByPhone(phone = '') {
 async function setFriendsByPhone(phone = '', friend) {
     return rayconnect.store.update(`friends:${phone}`, friend.id, friend);
 }
-
 
 async function updateMyFriend(phone = '', friend = {}) {
     return setFriendsByPhone(phone, friend);
