@@ -527,6 +527,15 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
 
     let sound = new Audio();
 
+    sound.onplay = async () => {
+        vol = await loudness.getVolume();
+        await loudness.setVolume($rootScope.volume);
+    }
+
+    sound.onpause = async () => {
+        await loudness.setVolume(vol);
+    }
+
     $scope.soundOf = (index) => {
         if ($scope.playing == index) {
             sound.pause();
