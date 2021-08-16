@@ -86,6 +86,8 @@ app.run(async ($rootScope) => {
 
     $rootScope.online = true;
 
+    $rootScope.minimizedlaunch = null;
+
     $rootScope.by = null;
 
     $rootScope.ing = false;
@@ -219,8 +221,11 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
         let notification = await storage.get('notification'),
             volume = await storage.get('volume'),
             sound = await storage.get('sound'),
-            soundPath = await storage.get('sound:path');
+            soundPath = await storage.get('sound:path'),
+            minimizedlaunch = await storage.get('launch:minimized');
 
+        if (minimizedlaunch)
+            $rootScope.minimizedlaunch = minimizedlaunch == 'true' ? true : false;
 
         if (notification)
             $rootScope.notification = notification == 'true' ? true : false;
@@ -454,6 +459,7 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
     $scope.lastversion = $rootScope.lastversion;
     $scope.volume = $rootScope.volume;
     $scope.launchable = null;
+    $scope.minimizedlaunch = $rootScope.minimizedlaunch;
     $scope.sounds = sounds;
     $scope.sound = $rootScope.sound;
     $scope.soundPath = $rootScope.soundPath;
@@ -470,6 +476,11 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
 
     $scope.onModeChange = (event) => {
         $scope.setTheme(event ? 'dark' : 'default');
+    }
+
+    $scope.onMinimizedlaunchChange = (event) => {
+        $rootScope.minimizedlaunch = event;
+        storage.set('launch:minimized', event.toString());
     }
 
     $scope.onNotificationChange = (event) => {
@@ -521,7 +532,7 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
     }
 
     $scope.setAutoLaunch = async (event) => {
-        console.log(event);
+        $scope.launchable = event;
         event ? await autolaunch.enable() : await autolaunch.disable();
     }
 

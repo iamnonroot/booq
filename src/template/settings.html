@@ -168,15 +168,25 @@
             </md-radio-group>
         </md-list>
         <md-list ng-if="view == 'Auto launch'">
-            <md-list-item class="md-2-line" layout="row" ng-click="setView('Auto launch')">
+            <md-list-item class="md-2-line" layout="row">
                 <md-icon style="margin-top: 15px;" md-svg-src="./assets/icons/auto-launch.svg"></md-icon>
                 <div class="md-list-item-text" layout="column">
                     <span>Auto launch</span>
-                    <p style="margin-top: -10px;">{{launchable? 'On': 'Off'}}</p>
+                    <p>{{launchable? 'On': 'Off'}}</p>
                 </div>
                 <span flex></span>
                 <md-switch style="margin-top: 20px;" ng-model="launchable" ng-change="setAutoLaunch(launchable)"
                     aria-label="launchable">
+                </md-switch>
+            </md-list-item>
+            <md-list-item class="md-2-line" layout="row" ng-if="launchable">
+                <div class="md-list-item-text" layout="column">
+                    <span>Minimize after launch</span>
+                    <p>{{minimizedlaunch? 'Available': 'Unavailable'}}</p>
+                </div>
+                <span flex></span>
+                <md-switch style="margin-top: 20px;" ng-model="minimizedlaunch"
+                    ng-change="onMinimizedlaunchChange(minimizedlaunch)" aria-label="minimizedlaunch">
                 </md-switch>
             </md-list-item>
             <md-divider></md-divider>

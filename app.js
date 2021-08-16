@@ -1,6 +1,31 @@
 const { app, BrowserWindow, ipcMain, Menu, Tray } = require('electron'),
     path = require('path'),
-    Rayconnect = require('rayconnect-client').default;
+    storage = require('electron-settings'),
+    Rayconnect = require('rayconnect-client').default,
+    http = require('http'),
+    net = require('net'),
+    server = net.createServer(),
+    PORT = 10879;
+
+server.once('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        http.get(`http://127.0.0.1:${PORT}/open`, () => {
+            app.quit();
+        });
+    }
+});
+
+server.once('listening', () => {
+    server.close();
+    let httpServer = http.createServer((req, res) => {
+        if (req.url == '/open') win.show();
+        res.end();
+    });
+    httpServer.listen(PORT, "127.0.0.1");
+});
+
+server.listen(PORT);
+
 
 const rayconnect = new Rayconnect({
     'appID': 'booq',
@@ -29,8 +54,12 @@ function createWindow() {
         }
     });
 
-    win.once('ready-to-show', () => {
-        setTimeout(() => {
+    win.once('ready-to-show', async () => {
+        let minimizedlaunch = await storage.get('launch:minimized');
+
+        minimizedlaunch = minimizedlaunch == 'true' ? true : false;
+
+        if (minimizedlaunch == false) setTimeout(() => {
             win.show();
         }, 1000);
     });
@@ -65,7 +94,7 @@ app.whenReady()
 
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') app.quit()
-})
+});
 
 ipcMain.on('auth', async (res, req = { token: '' }) => {
     await rayconnect.Auth(req.token);
