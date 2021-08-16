@@ -114,7 +114,7 @@ ipcMain.on('auth:verify', async (res, req = { phone: '', code: '' }) => {
 });
 
 ipcMain.on('auth:kill', async () => {
-    let phone = rayconnect.user.uid, token = rayconnect.user.token;
+    friends = [];
 });
 
 ipcMain.on('friend:create', async (res, req) => {

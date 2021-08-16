@@ -2,14 +2,26 @@
     user-select: none;
 }
 
+html {
+    background-color: #000;
+}
+
 body {
     overflow: hidden;
 
     position: relative;
+
+    transition: transform 1s;
+
 }
 
 body[md-theme="dark"] {
     background-color: #616161;
+}
+
+body.destroy {
+    transform: scale(0);
+    transition: transform 4s;
 }
 
 /* total width */
@@ -281,6 +293,15 @@ div.color.red {
 
 div.color.pink {
     background-color: #e91e63;
+}
+
+@media (min-width: 600px) and (max-width: 959px) {
+    md-toast {
+        padding: 8px !important;
+        min-width: 304px !important;
+        width: unset !important;
+        right: unset !important;
+    }
 }
 
 @media screen and (min-width: 773px) {

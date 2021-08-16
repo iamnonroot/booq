@@ -34,7 +34,18 @@ const sounds = [
 let audio = new Audio();
 audio.loop = true;
 
-let notification, vol = 0;
+let notification, vol = -1;
+
+app.directive('autoFocus', ['$timeout', function ($timeout) {
+    return {
+        restrict: 'A',
+        link: function ($scope, $element) {
+            $timeout(function () {
+                $element[0].focus();
+            });
+        }
+    }
+}]);
 
 app.config(($mdThemingProvider) => {
     $mdThemingProvider.theme('dark')
@@ -150,21 +161,18 @@ app.run(async ($rootScope) => {
     }
 });
 
-app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
+app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
 
     ipcRenderer.on('friend:added', (_, res) => {
         $rootScope.users.push(res.data.friend)
         $scope.$apply();
-
     })
 
     ipcRenderer.on('auth', (_, res = { friends: [] }) => {
         $scope.auth.ed = true;
         $scope.loading = false;
         $rootScope.users = res.friends || [];
-
         $scope.$apply();
-
     })
 
     ipcRenderer.on('auth:send', (_, res = { status: false }) => {
@@ -191,8 +199,11 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
                 'ing': false,
                 'ed': true
             };
+            $scope.$apply();
         }
     });
+
+    $scope.destroying = false;
 
     $scope.auth = {
         'phone': '',
@@ -299,12 +310,47 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast) => {
             title: 'Logout',
             content: 'Are you crazy? Do you want to leave us from the bottom of your heart?',
             no: 'No, I love you',
-            yes: 'I will divorce you'
+            yes: 'Yes, I will divorce you'
         }, async () => {
             ipcRenderer.send('auth:kill');
-            await storage.unset('rayconnect-token');
-            $scope.auth.ed = false;
-            $rootScope.users = [];
+            audio.pause();
+            audio.src = sounds[0].path;
+            if (vol != -1) await loudness.setVolume(vol);
+            await storage.set('rayconnect-token', null);
+            await storage.set('theme', 'default');
+            await storage.set('notification', null);
+            await storage.set('volume', null);
+            await storage.set('sound', null);
+            await storage.set('sound:path', null);
+            await storage.set('launch:minimized', null);
+            await autolaunch.disable();
+            $scope.destroying = true;
+            $scope.$apply();
+            $timeout(() => {
+                $scope.auth = {
+                    'phone': '',
+                    'code': '',
+                    'sent': false,
+                    'ing': false,
+                    'ed': false
+                };
+                $rootScope.theme = 'default';
+                $rootScope.lastversion = null;
+                $rootScope.notification = true;
+                $rootScope.volume = 100;
+                $rootScope.sound = -1;
+                $rootScope.soundPath = null;
+                $rootScope.online = true;
+                $rootScope.minimizedlaunch = null;
+                $rootScope.by = null;
+                $rootScope.ing = false;
+                $rootScope.users = [];
+                $scope.$apply();
+            }, 4000);
+            $timeout(() => {
+                $scope.destroying = false;
+                $scope.$apply();
+            }, 5000);
         });
     }
 
