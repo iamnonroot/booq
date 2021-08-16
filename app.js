@@ -66,6 +66,7 @@ function createWindow() {
 
     win.loadFile(path.join(__dirname, 'src', 'index.html'));
 
+    win.removeMenu();
 
     tray = new Tray(path.join(__dirname, 'src', 'assets', 'image', 'logo.png'));
     tray.setToolTip('BooQ');
