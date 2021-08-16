@@ -12,7 +12,6 @@ body {
     position: relative;
 
     transition: transform 1s;
-
 }
 
 body[md-theme="dark"] {
@@ -21,6 +20,7 @@ body[md-theme="dark"] {
 
 body.destroy {
     transform: scale(0);
+    pointer-events: none;
     transition: transform 4s;
 }
 

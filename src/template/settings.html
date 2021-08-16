@@ -118,14 +118,14 @@
             </md-list-item>
             <md-divider></md-divider>
             <md-subheader>App info</md-subheader>
-            <md-list-item class="md-2-line">
+            <md-list-item class="md-2-line" ng-click="destroy()">
                 <div class="md-list-item-text" layout="column">
                     <span>Version</span>
-                    <p>{{version}}</p>
+                    <p style="margin-top: -10px;">{{version}}</p>
                 </div>
-                <md-progress-circular style="margin-top: 25px; margin-right: 10px;" ng-if="lastversion == null"
+                <md-progress-circular style="margin-top: 15px; margin-right: 10px;" ng-if="lastversion == null"
                     md-mode="indeterminate" md-diameter="25px"></md-progress-circular>
-                <md-button style="margin-top: 20px; margin-right: 0;" aria-label="update-app"
+                <md-button style="margin-top: 10px; margin-right: 0;" aria-label="update-app"
                     ng-if="lastversion != null" class="md-icon-button" ng-click="showDownloadPage()">
                     <md-tooltip md-direction="left" style="margin-right: -20px;">{{lastversion == version?'You have
                         latest vesion':'You have a update'}}</md-tooltip>

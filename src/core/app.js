@@ -81,6 +81,8 @@ app.config(($mdThemingProvider) => {
 });
 
 app.run(async ($rootScope) => {
+    $rootScope.destroying = false;
+
     $rootScope.theme = await storage.get('theme') || 'default';
 
     $rootScope.version = electron.remote.app.getVersion();
@@ -203,8 +205,6 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
         }
     });
 
-    $scope.destroying = false;
-
     $scope.auth = {
         'phone': '',
         'code': '',
@@ -324,7 +324,7 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
             await storage.set('sound:path', null);
             await storage.set('launch:minimized', null);
             await autolaunch.disable();
-            $scope.destroying = true;
+            $rootScope.destroying = true;
             $scope.$apply();
             $timeout(() => {
                 $scope.auth = {
@@ -348,7 +348,7 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
                 $scope.$apply();
             }, 4000);
             $timeout(() => {
-                $scope.destroying = false;
+                $rootScope.destroying = false;
                 $scope.$apply();
             }, 5000);
         });
@@ -510,6 +510,22 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
     $scope.sound = $rootScope.sound;
     $scope.soundPath = $rootScope.soundPath;
     $scope.playing = null;
+
+    $scope.destroy = () => {
+        destrois += 1;
+        if (destrois >= 8) {
+            destrois = 0;
+            $scope.close();
+            $timeout(()=>{
+                $rootScope.destroying = true;
+                
+                $timeout(() => {
+                    $rootScope.destroying = false
+                }, 14000);
+            }, 1000);
+
+        }
+    }
 
     $scope.setView = (to = null) => {
         $scope.view = to;
@@ -685,3 +701,5 @@ function BigButtonControl($scope, $rootScope, $mdDialog, index) {
             });
     }
 }
+
+let destrois = 0;
