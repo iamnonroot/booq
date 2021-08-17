@@ -1,6 +1,6 @@
 {
   "name": "booq",
-  "version": "0.0.1-beta-1",
+  "version": "0.0.1-beta-2",
   "description": "Make a booq for your friends and make them awake !",
   "main": "app.js",
   "scripts": {

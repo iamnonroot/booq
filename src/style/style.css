@@ -70,8 +70,11 @@ md-toolbar.app-bar .md-toolbar-tools {
     padding-right: 0 !important;
 }
 
+md-toolbar.app-bar md-icon[aria-label="Logo"] {
+    margin-right: 8px;
+}
+
 md-toolbar.app-bar span.title {
-    margin-left: 8px;
     font-size: 15px;
 }
 
@@ -133,6 +136,26 @@ md-toolbar.fixed {
     z-index: 20;
 }
 
+md-toolbar.fixed div.logo {
+    width: 30px;
+    height: 30px;
+
+    background-image: url('../assets/image/logo.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    margin-right: 18px;
+
+    transform: rotate(0deg);
+
+    transition: all 1s;
+}
+
+md-toolbar.fixed div.logo.animated {
+    animation: logo 1s infinite;
+}
+
 .md-toolbar-tools.big-toolbar {
     height: 130px !important;
     max-height: 130px !important;
@@ -192,10 +215,26 @@ div.container.cards {
 
 div.container.cards md-card {
     width: 350px;
+
+    position: relative;
 }
 
 div.container.cards md-card.booqing {
     animation: shake 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955) both infinite;
+}
+
+div.container.cards md-card div.online {
+    position: absolute;
+    
+    top: 20px;
+    right: 20px;
+
+    width: 15px;
+    height: 15px;
+
+    border-radius: 50%;
+
+    background-color: #4caf50;
 }
 
 div.container.auth {
@@ -358,5 +397,14 @@ div.color.pink {
     90% {
         -webkit-transform: translateX(-8px);
         transform: translateX(-8px);
+    }
+}
+
+@keyframes logo {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(-360deg);
     }
 }

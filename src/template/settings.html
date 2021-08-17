@@ -42,11 +42,11 @@
                 <md-icon style="margin-top: 25px;" md-svg-src="./assets/icons/do-not-disturb.svg"></md-icon>
                 <div class="md-list-item-text" layout="column">
                     <span>Do not disturb</span>
-                    <p>{{online? 'On': 'Off'}}</p>
+                    <p>{{mute? 'On': 'Off'}}</p>
                 </div>
                 <span flex></span>
-                <md-switch style="margin-top: 20px;" ng-model="online" ng-change="onOnlineChange(online)"
-                    aria-label="online">
+                <md-switch style="margin-top: 20px;" ng-model="mute" ng-change="onMuteChange(mute)"
+                    aria-label="mute">
                 </md-switch>
             </md-list-item>
             <md-divider></md-divider>
@@ -98,7 +98,7 @@
                 <md-icon ng-if="volume == 0" style="margin-top: 17px;" aria-label="volume"
                     md-svg-src="./assets/icons/mute.svg"></md-icon>
                 <div class="md-list-item-text" style="overflow: unset;" layout="column">
-                    <span style="position: relative; top: 10px;">Volume</span>
+                    <span style="position: relative; top: 10px;">Sound volume</span>
                     <p style="padding: 0;" layout="row">
                         <md-slider aria-label="volume" style="width: 100%;" ng-model="volume"
                             ng-change="onVolumeChange(volume)" md-discrete="" step="1" min="0" max="100">
@@ -108,8 +108,35 @@
                     </p>
                 </div>
             </md-list-item>
+            <md-list-item class="md-2-line" layout="row">
+                <md-icon ng-if="systemVolume != 0" style="margin-top: 17px;" aria-label="volume"
+                    md-svg-src="./assets/icons/not-mute.svg">
+                </md-icon>
+                <md-icon ng-if="systemVolume == 0" style="margin-top: 17px;" aria-label="volume"
+                    md-svg-src="./assets/icons/mute.svg"></md-icon>
+                <div class="md-list-item-text" style="overflow: unset;" layout="column">
+                    <span style="position: relative; top: 10px;">System volume</span>
+                    <p style="padding: 0;" layout="row">
+                        <md-slider aria-label="systemVolume" style="width: 100%;" ng-model="systemVolume"
+                            ng-change="onSystemVolumeChange(systemVolume)" md-discrete="" step="1" min="0" max="100">
+                        </md-slider>
+                        <span
+                            style="margin-top: 10px; margin-left: 10px; width: 25px; max-width: 25px; min-width: 25px;">{{systemVolume}}</span>
+                    </p>
+                </div>
+            </md-list-item>
             <md-divider></md-divider>
             <md-subheader>Account settings</md-subheader>
+            <md-list-item class="md-2-line" layout="row" layout-align="start center">
+                <div class="md-list-item-text" layout="column">
+                    <span>Friend request</span>
+                    <p>{{requestable?'Enabled':'Disabled'}}</p>
+                </div>
+                <span flex></span>
+                <md-switch style="margin-top: 20px;" ng-model="requestable" ng-change="onRequestableChange(requestable)"
+                    aria-label="requestable">
+                </md-switch>
+            </md-list-item>
             <md-list-item class="md-1-line" ng-click="logout()">
                 <div class="md-list-item-text" layout="row">
                     <md-icon md-svg-src="./assets/icons/logout.svg"></md-icon>
@@ -182,7 +209,7 @@
             <md-list-item class="md-2-line" layout="row" ng-if="launchable">
                 <div class="md-list-item-text" layout="column">
                     <span>Minimize after launch</span>
-                    <p>{{minimizedlaunch? 'Available': 'Unavailable'}}</p>
+                    <p>{{minimizedlaunch? 'Enabled': 'Disabled'}}</p>
                 </div>
                 <span flex></span>
                 <md-switch style="margin-top: 20px;" ng-model="minimizedlaunch"

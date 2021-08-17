@@ -28,6 +28,10 @@ const sounds = [
     {
         name: 'War horn',
         path: path.join(assets, 'sounds', 'war-horn.wav')
+    },
+    {
+        name: 'Dialup',
+        path: path.join(assets, 'sounds', 'dialup.wav')
     }
 ];
 
@@ -45,6 +49,54 @@ app.directive('autoFocus', ['$timeout', function ($timeout) {
             });
         }
     }
+}]);
+
+app.directive('ngRightClick', function ($parse) {
+    return function (scope, element, attrs) {
+        var fn = $parse(attrs.ngRightClick);
+        element.bind('contextmenu', function (event) {
+            scope.$apply(function () {
+                fn(scope, { $event: event });
+            });
+        });
+    };
+});
+
+app.directive('contextMenu', [function () {
+    return {
+        restrict: 'A',
+        require: 'mdMenu',
+        link: function (scope, element, attrs, menu) {
+            let prev = { x: 0, y: 0 };
+            scope.$userIndex = -1;
+            scope.$mdOpenContextMenu = function (event) {
+                scope.$userIndex = -1;
+                let doms = event.path;
+                for (let dom of doms) {
+                    if (dom.tagName == "MD-CARD") {
+                        scope.$userIndex = parseInt(dom.getAttribute("i"));
+                    }
+                }
+                if (attrs['authed'] == "false") return;
+
+                menu.offsets = () => {
+                    let mouse = {
+                        x: event.clientX,
+                        y: event.clientY
+                    };
+                    let offsets = {
+                        left: mouse.x - prev.x,
+                        top: mouse.y - prev.y
+                    };
+                    prev = mouse;
+
+                    return offsets;
+                };
+
+                menu.open();
+            };
+        }
+    };
 }]);
 
 app.config(($mdThemingProvider) => {
@@ -97,7 +149,7 @@ app.run(async ($rootScope) => {
 
     $rootScope.soundPath = null;
 
-    $rootScope.online = true;
+    $rootScope.mute = null;
 
     $rootScope.minimizedlaunch = null;
 
@@ -105,10 +157,13 @@ app.run(async ($rootScope) => {
 
     $rootScope.ing = false;
 
+    $rootScope.ed = null; // booqed phone
+
+    $rootScope.requestable = null; // can ask for friend request
+
     $rootScope.users = [];
 
     ipcRenderer.on('audio', async (_, res = { audio: 'off', phone: '' }) => {
-        if ($rootScope.online == false) return;
         if ($rootScope.soundPath && existsSync($rootScope.soundPath) == false) {
             $rootScope.sound = 0;
             $rootScope.soundPath = null;
@@ -127,9 +182,18 @@ app.run(async ($rootScope) => {
         }
     });
 
+    ipcRenderer.on('booqed', async (_, res = { phone: '' }) => {
+        $rootScope.ed = res.phone;
+        $rootScope.$apply();
+    });
+
     async function on(res) {
-        vol = await loudness.getVolume();
-        await loudness.setVolume($rootScope.volume);
+        if ($rootScope.mute == false) {
+            vol = await loudness.getVolume();
+            await loudness.setVolume($rootScope.volume);
+        } else {
+            audio.volume = 0;
+        }
         audio.currentTime = 0;
         audio.loop = true;
         audio.onended = null;
@@ -147,8 +211,8 @@ app.run(async ($rootScope) => {
                 'actions': 'STOP',
             });
             notification.show();
-            notification.on('click', () => pauseAudio());
-            notification.on('close', () => pauseAudio());
+            notification.on('click', () => off());
+            notification.on('close', () => off());
         }
     }
 
@@ -159,12 +223,14 @@ app.run(async ($rootScope) => {
         if (notification) notification.close();
         audio.pause();
         audio.currentTime = 0;
-        await loudness.setVolume(vol);
+        audio.volume = 1;
+        if ($rootScope.mute == false || vol != -1) {
+            await loudness.setVolume(vol);
+        }
     }
 });
 
 app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
-
     ipcRenderer.on('friend:added', (_, res) => {
         $rootScope.users.push(res.data.friend)
         $scope.$apply();
@@ -205,6 +271,17 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
         }
     });
 
+    ipcRenderer.on('friend:request', (_, res = { fullname: '', phone: '' }) => {
+        $scope.openFriendDialog(null, null, res);
+        if ($rootScope.notification == true) {
+            notification = new electron.remote.Notification({
+                'title': 'BooQ',
+                'body': `You have a friend request from ${res.fullname}.`,
+            });
+            notification.show();
+        }
+    });
+
     $scope.auth = {
         'phone': '',
         'code': '',
@@ -215,8 +292,8 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
 
     $scope.loading = true;
 
-    $scope.onOnlineChange = (event) => {
-        $rootScope.online = event;
+    $scope.onMuteChange = (event) => {
+        $rootScope.mute = event;
     }
 
     $scope.init = async () => {
@@ -233,7 +310,15 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
             volume = await storage.get('volume'),
             sound = await storage.get('sound'),
             soundPath = await storage.get('sound:path'),
-            minimizedlaunch = await storage.get('launch:minimized');
+            minimizedlaunch = await storage.get('launch:minimized'),
+            requestable = await storage.get('requestable'),
+            mute = await storage.get('mute');
+
+        if (mute)
+            $rootScope.mute = mute == 'true' ? true : false;
+
+        if (requestable)
+            $rootScope.requestable = requestable == 'true' ? true : false;
 
         if (minimizedlaunch)
             $rootScope.minimizedlaunch = minimizedlaunch == 'true' ? true : false;
@@ -323,6 +408,7 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
             await storage.set('sound', null);
             await storage.set('sound:path', null);
             await storage.set('launch:minimized', null);
+            await storage.set('requestable', null);
             await autolaunch.disable();
             $rootScope.destroying = true;
             $scope.$apply();
@@ -340,10 +426,11 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
                 $rootScope.volume = 100;
                 $rootScope.sound = -1;
                 $rootScope.soundPath = null;
-                $rootScope.online = true;
+                $rootScope.mute = false;
                 $rootScope.minimizedlaunch = null;
                 $rootScope.by = null;
                 $rootScope.ing = false;
+                $rootScope.requestable = true;
                 $rootScope.users = [];
                 $scope.$apply();
             }, 4000);
@@ -354,13 +441,18 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
         });
     }
 
-    $scope.openFriendDialog = (event, index = null) => {
+    $scope.openFriendDialog = (event, index = null, user = null) => {
         let fullname = '', phone = '', id = '';
 
         if (index != null) {
             fullname = $scope.users[index]['fullname'];
             phone = $scope.users[index]['phone'];
             id = $scope.users[index]['id']
+        }
+
+        if (user != null) {
+            fullname = user.fullname;
+            phone = user.phone;
         }
 
         $mdDialog.show({
@@ -386,7 +478,8 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
         });
     }
 
-    $scope.askForDelete = (event, id, index) => {
+    $scope.askForDelete = (event, index) => {
+        let id = $scope.users[index].id;
         $scope.askForConfirm(event, {
             title: 'Delete your friend',
             content: 'Are you upset with your friend and want to delete it?',
@@ -501,11 +594,13 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
     $scope.colors = ['default', 'blue', 'cyan', 'green', 'amber', 'red', 'pink'];
     $scope.version = $rootScope.version;
     $scope.notification = $rootScope.notification;
-    $scope.online = $rootScope.online;
+    $scope.mute = $rootScope.mute;
     $scope.lastversion = $rootScope.lastversion;
     $scope.volume = $rootScope.volume;
+    $scope.systemVolume = -1;
     $scope.launchable = null;
     $scope.minimizedlaunch = $rootScope.minimizedlaunch;
+    $scope.requestable = $rootScope.requestable;
     $scope.sounds = sounds;
     $scope.sound = $rootScope.sound;
     $scope.soundPath = $rootScope.soundPath;
@@ -516,15 +611,20 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
         if (destrois >= 8) {
             destrois = 0;
             $scope.close();
-            $timeout(()=>{
+            $timeout(() => {
                 $rootScope.destroying = true;
-                
+
                 $timeout(() => {
                     $rootScope.destroying = false
                 }, 14000);
             }, 1000);
 
         }
+    }
+
+    $scope.onRequestableChange = (event) => {
+        $rootScope.requestable = event;
+        storage.set('requestable', event.toString());
     }
 
     $scope.setView = (to = null) => {
@@ -550,13 +650,46 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
         storage.set('notification', event.toString());
     }
 
-    $scope.onOnlineChange = (event) => {
-        $rootScope.online = event;
+    $scope.onMuteChange = (event) => {
+        $rootScope.mute = event;
+        storage.set('mute', event.toString());
     }
 
-    $scope.onVolumeChange = (event) => {
-        $rootScope.volume = event;
+    let effect = new Audio(path.join(assets, 'sounds', 'sound.wav'));
+    $scope.playSoundChange = () => {
+        return new Promise((resolve) => {
+            if (effect.played) {
+                effect.pause();
+                effect.currentTime = 0;
+                effect.onended = null;
+            }
+            effect.play();
+            effect.onplay = async () => {
+            }
+            effect.onended = async () => {
+                resolve();
+            }
+        });
+    }
+    
+    $scope.onVolumeChange = async (event) => {
+        $rootScope.volume = parseInt(event);
         storage.set('volume', event.toString());
+        vol = await loudness.getVolume();
+        await loudness.setVolume($rootScope.volume);
+        await $scope.playSoundChange(parseInt(event));
+        await loudness.setVolume(vol);
+    }
+    
+    $scope.onSystemVolumeChange = async (event) => {
+        vol = parseInt(event);
+        await loudness.setVolume(vol);
+        await $scope.playSoundChange();
+    }
+
+    $scope.setSystemVolume = async () => {
+        let value = await loudness.getVolume();
+        $scope.systemVolume = parseInt(value);
     }
 
     $scope.close = () => {
@@ -596,6 +729,7 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
     $scope.setAutoLaunch = async (event) => {
         $scope.launchable = event;
         event ? await autolaunch.enable() : await autolaunch.disable();
+        if (event == false && $scope.minimizedlaunch == true) $scope.onMinimizedlaunchChange(false);
     }
 
     let sound = new Audio();
@@ -675,13 +809,27 @@ function SettingsControl($scope, $rootScope, $mdDialog, $timeout) {
     }
 
     $scope.checkAutoLaunch();
+    $scope.setSystemVolume();
 }
 
-function BigButtonControl($scope, $rootScope, $mdDialog, index) {
+function BigButtonControl($scope, $rootScope, $mdDialog, $timeout, index) {
     $scope.user = $rootScope.users[index];
+    $scope.ed = false;
     $scope.booqing = false;
 
+    ipcRenderer.on('booqed', async (_, res = { phone: '' }) => {
+        $scope.ed = res.phone == $scope.user.phone;
+        $rootScope.ed = res.phone;
+        $scope.$apply();
+        $timeout(() => {
+            $scope.ed = false;
+            $rootScope.ed = null;
+            $scope.$apply();
+        }, 5000);
+    });
+
     $scope.close = () => {
+        $rootScope.ed = null;
         $mdDialog.hide();
     }
 
