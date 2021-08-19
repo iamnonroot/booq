@@ -96,6 +96,11 @@ md-toolbar.app-bar button {
     justify-content: center;
 }
 
+md-toolbar.app-bar button:hover,
+md-toolbar.app-bar button:focus {
+    background-color: rgba(0, 0, 0, 0.12);
+}
+
 md-toolbar.app-bar md-icon {
     font-size: 18px;
     width: 18px;

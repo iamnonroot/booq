@@ -100,6 +100,8 @@ app.directive('contextMenu', [function () {
 }]);
 
 app.config(($mdThemingProvider) => {
+    $mdThemingProvider.alwaysWatchTheme(true);
+
     $mdThemingProvider.theme('dark')
         .primaryPalette('indigo', {
             'default': '800',
@@ -554,7 +556,8 @@ app.controller('ctrl', ($scope, $rootScope, $mdDialog, $mdToast, $timeout) => {
     $scope.init();
 });
 
-function FormControl($scope, $mdDialog, $mdToast, user) {
+function FormControl($rootScope, $scope, $mdDialog, $mdToast, user) {
+    $scope.theme = $rootScope.theme;
     $scope.fullname = user.fullname;
     $scope.phone = user.phone;
 
@@ -578,7 +581,9 @@ function FormControl($scope, $mdDialog, $mdToast, user) {
     }
 }
 
-function ConfirmControl($scope, $mdDialog, data) {
+function ConfirmControl($rootScope, $scope, $mdDialog, data) {
+    $scope.theme = $rootScope.theme;
+
     $scope.title = data.title;
     $scope.content = data.content;
     $scope.no = data.no;

@@ -17,9 +17,9 @@
     <md-toolbar class="app-bar md-primary md-hue-2">
         <div class="md-toolbar-tools">
 
-            <md-icon ng-if="mute == true" aria-label="Logo" md-svg-src="./assets/icons/not-mute.svg">
+            <md-icon ng-if="mute == false" aria-label="Logo" md-svg-src="./assets/icons/not-mute.svg">
             </md-icon>
-            <md-icon ng-if="mute == false" aria-label="Logo" md-svg-src="./assets/icons/mute.svg">
+            <md-icon ng-if="mute == true" aria-label="Logo" md-svg-src="./assets/icons/mute.svg">
             </md-icon>
             <span class="title">Booq{{ing?'ing':''}}</span>
             <div class="flex"></div>
